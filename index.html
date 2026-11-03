@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <title>Clasificador Bayes Ingenuo</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Inicio del espacio de trabajo Bayes Ingenuo">
+          <span class="brand-mark" aria-hidden="true">Σ</span>
+          <span>Bayes Ingenuo</span>
+        </a>
+      </header>
+
+      <main class="workspace">
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">01 / DATASET</p>
+          <h1 id="page-title">Carga tu dataset.</h1>
+          <p class="intro-copy">Selecciona un archivo CSV o XLSX para cargar tu dataset.</p>
+        </section>
+
+        <section class="upload-section" aria-label="Cargar dataset">
+          <div class="drop-zone" id="drop-zone" tabindex="0" role="region" aria-label="Elige un dataset CSV o XLSX, o arrástralo aquí">
+            <input id="file-input" class="visually-hidden" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+            <div class="upload-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M16 21V5m0 0L9.5 11.5M16 5l6.5 6.5M6 20v6h20v-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h2>Arrastra tu dataset aquí</h2>
+            <p class="drop-hint">o <button class="browse-button" id="browse-button" type="button">explora tus archivos</button></p>
+            <p class="file-types">CSV o XLSX <span aria-hidden="true">·</span> hasta 20 MB</p>
+          </div>
+          <p class="upload-message" id="upload-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="config-section" aria-labelledby="test-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">02 / PRUEBAS</p>
+              <h2 id="test-title">Archivo de pruebas.</h2>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="use-external-test" />
+            <span>Usar archivo de pruebas externo</span>
+          </label>
+          <div class="test-panel" id="test-file-panel" hidden>
+            <div class="drop-zone drop-zone--compact" id="test-drop-zone" tabindex="0" role="region" aria-label="Elige un archivo de pruebas CSV o XLSX, o arrástralo aquí">
+              <input id="test-file-input" class="visually-hidden" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+              <div class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none">
+                  <path d="M16 21V5m0 0L9.5 11.5M16 5l6.5 6.5M6 20v6h20v-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h2>Arrastra el archivo de pruebas</h2>
+              <p class="drop-hint">o <button class="browse-button" id="test-browse-button" type="button">explora tus archivos</button></p>
+              <p class="file-types">CSV o XLSX <span aria-hidden="true">·</span> hasta 20 MB</p>
+            </div>
+            <p class="upload-message" id="test-upload-message" role="status" aria-live="polite"></p>
+            <div class="test-file-row" id="test-file-meta" hidden>
+              <span class="test-file-name" id="test-file-name"></span>
+              <button class="link-button" id="remove-test-file" type="button">Quitar archivo</button>
+            </div>
+          </div>
+          <p class="config-note" id="test-note" hidden>
+            Se usará el dataset completo para el análisis y este archivo como conjunto de pruebas. Las opciones de partición quedan desactivadas.
+          </p>
+        </section>
+
+        <section class="config-section" aria-labelledby="validation-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">03 / VALIDACIÓN</p>
+              <h2 id="validation-title">Método de validación.</h2>
+            </div>
+          </div>
+          <fieldset class="fieldset" id="validation-fieldset">
+            <legend class="visually-hidden">Método de validación</legend>
+            <div class="option-grid">
+              <label class="option-card">
+                <input type="radio" name="validation-method" value="simple" checked />
+                <span class="option-content">
+                  <span class="option-title">Validación simple</span>
+                  <span class="option-desc">Entrenamiento y pruebas según el porcentaje indicado.</span>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="validation-method" value="cross" />
+                <span class="option-content">
+                  <span class="option-title">Validación cruzada</span>
+                  <span class="option-desc">Partición fija del 50% para entrenamiento y 50% para pruebas.</span>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="validation-method" value="stratified" />
+                <span class="option-content">
+                  <span class="option-title">Aleatoria estratificada</span>
+                  <span class="option-desc">Mismo porcentaje de cada clase en entrenamiento y pruebas.</span>
+                </span>
+              </label>
+            </div>
+            <div class="percentage-row" id="simple-percentage-row">
+              <label for="train-percentage">Porcentaje de entrenamiento</label>
+              <input id="train-percentage" type="number" min="1" max="99" step="1" value="70" inputmode="numeric" />
+              <span class="percentage-hint" id="simple-test-hint">Pruebas: 30%</span>
+            </div>
+            <div class="percentage-row" id="stratified-percentage-row" hidden>
+              <label for="stratified-percentage">Porcentaje por clase</label>
+              <input id="stratified-percentage" type="number" min="1" max="99" step="1" value="70" inputmode="numeric" />
+              <span class="percentage-hint" id="stratified-test-hint">Pruebas por clase: 30%</span>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="config-section" aria-labelledby="discretization-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">04 / DISCRETIZACIÓN</p>
+              <h2 id="discretization-title">Atributos continuos.</h2>
+            </div>
+          </div>
+          <fieldset class="fieldset" id="discretization-fieldset">
+            <legend class="visually-hidden">Método de discretización</legend>
+            <div class="option-grid">
+              <label class="option-card">
+                <input type="radio" name="discretization-method" value="density" />
+                <span class="option-content">
+                  <span class="option-title">Por función de densidad</span>
+                  <span class="option-desc">Intervalos definidos a partir de la distribución de los datos.</span>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="discretization-method" value="equal-frequency" />
+                <span class="option-content">
+                  <span class="option-title">Frecuencia igual</span>
+                  <span class="option-desc">Cada intervalo concentra la misma cantidad de valores.</span>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="discretization-method" value="equal-width" checked />
+                <span class="option-content">
+                  <span class="option-title">Ancho igual</span>
+                  <span class="option-desc">El rango se divide en intervalos de la misma amplitud.</span>
+                </span>
+              </label>
+            </div>
+            <div class="percentage-row">
+              <label for="bin-count">Número de intervalos</label>
+              <input id="bin-count" type="number" min="2" max="50" step="1" value="5" inputmode="numeric" />
+            </div>
+            <p class="config-note" id="continuous-note"></p>
+          </fieldset>
+        </section>
+
+        <div class="actions">
+          <button class="primary-button" id="analyze-button" type="button">Analizar</button>
+        </div>
+        <div class="analysis-summary" id="analysis-summary" role="status" aria-live="polite" hidden></div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
