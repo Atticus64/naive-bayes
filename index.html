@@ -18,8 +18,7 @@
 
       <main class="workspace">
         <section class="intro" aria-labelledby="page-title">
-          <p class="eyebrow">01 / DATASET</p>
-          <h1 id="page-title">Carga tu dataset.</h1>
+          <h2 id="page-title">Carga tu dataset.</h1>
           <p class="intro-copy">Selecciona un archivo CSV o XLSX para cargar tu dataset.</p>
         </section>
 
@@ -38,10 +37,37 @@
           <p class="upload-message" id="upload-message" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="config-section" aria-labelledby="class-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="class-title">Columna de clase.</h2>
+            </div>
+          </div>
+          <fieldset class="fieldset" id="class-fieldset">
+            <legend class="visually-hidden">Posición de la columna de clase</legend>
+            <div class="option-grid option-grid--two">
+              <label class="option-card">
+                <input type="radio" name="class-position" value="last" checked />
+                <span class="option-content">
+                  <span class="option-title">Al final</span>
+                  <span class="option-desc">La última columna contiene la clase.</span>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="class-position" value="first" />
+                <span class="option-content">
+                  <span class="option-title">Al inicio</span>
+                  <span class="option-desc">La primera columna contiene la clase.</span>
+                </span>
+              </label>
+            </div>
+            <p class="config-note" id="class-note"></p>
+          </fieldset>
+        </section>
+
         <section class="config-section" aria-labelledby="test-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">02 / PRUEBAS</p>
               <h2 id="test-title">Archivo de pruebas.</h2>
             </div>
           </div>
@@ -75,7 +101,6 @@
         <section class="config-section" aria-labelledby="validation-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">03 / VALIDACIÓN</p>
               <h2 id="validation-title">Método de validación.</h2>
             </div>
           </div>
@@ -120,7 +145,6 @@
         <section class="config-section" aria-labelledby="discretization-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">04 / DISCRETIZACIÓN</p>
               <h2 id="discretization-title">Atributos continuos.</h2>
             </div>
           </div>
