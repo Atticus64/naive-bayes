@@ -6,6 +6,7 @@ import { AppUI } from './ui.js'
 export let dataset = null
 export let testDataset = null
 export let analysisRequest = null
+let currentModel = null
 
 const datasetService = new DatasetService()
 const config = new AnalysisConfig()
@@ -14,6 +15,7 @@ const analysisService = new AnalysisService({ config, classifier, metrics: Metri
 const ui = new AppUI({
   onDatasetFile: handleDatasetFile,
   onTestFile: handleTestFile,
+  onRemoveDatasetFile: handleRemoveDatasetFile,
   onToggleExternalTest: handleToggleExternalTest,
   onRemoveTestFile: handleRemoveTestFile,
   onClassPositionChange: handleClassPositionChange,
@@ -23,6 +25,7 @@ const ui = new AppUI({
   onStratifiedPercentageChange: handleStratifiedPercentageChange,
   onBinCountChange: handleBinCountChange,
   onAnalyze: handleAnalyze,
+  onPredictInstance: handlePredictInstance,
 })
 
 async function handleDatasetFile(file) {
@@ -31,12 +34,15 @@ async function handleDatasetFile(file) {
   try {
     const parsed = await datasetService.load(file)
     dataset = parsed
+    currentModel = null
+    ui.hideInstanceSection()
     console.log(dataset)
     const classInfo = getClassInfo(dataset, config.classPosition)
     console.log(classInfo)
     analysisService.previewDiscretization(dataset)
     ui.updateClassNote(dataset.getClassColumn(config.classPosition), classInfo)
     ui.updateContinuousNote(dataset)
+    ui.renderDatasetFileMeta(dataset)
 
     if (testDataset && !dataset.hasSameHeaders(testDataset)) {
       testDataset = null
@@ -88,6 +94,22 @@ function handleToggleExternalTest(enabled) {
   ui.setExternalTestEnabled(enabled)
 }
 
+function handleRemoveDatasetFile() {
+  dataset = null
+  testDataset = null
+  analysisRequest = null
+  currentModel = null
+  config.setUseExternalTest(false)
+
+  ui.clearDatasetFile()
+  ui.setExternalTestEnabled(false)
+  ui.clearTestUploadError()
+  ui.updateClassNote(null)
+  ui.updateContinuousNote(null)
+  ui.hideSummary()
+  ui.hideInstanceSection()
+}
+
 function handleRemoveTestFile() {
   testDataset = null
   config.setUseExternalTest(false)
@@ -96,6 +118,8 @@ function handleRemoveTestFile() {
 
 function handleClassPositionChange(position) {
   config.setClassPosition(position)
+  currentModel = null
+  ui.hideInstanceSection()
   if (!dataset) return
 
   const classInfo = getClassInfo(dataset, position)
@@ -124,6 +148,8 @@ function handleBinCountChange(value) {
 
 function handleAnalyze() {
   ui.hideSummary()
+  currentModel = null
+  ui.hideInstanceSection()
 
   if (!dataset) {
     ui.renderSummaryError('Carga un dataset antes de analizar.')
@@ -138,4 +164,34 @@ function handleAnalyze() {
   analysisRequest = analysisService.buildRequest({ dataset, testDataset })
   console.log(analysisRequest)
   ui.renderSummary(analysisRequest)
+
+  try {
+    const result = analysisService.run(analysisRequest)
+    console.log(result)
+    ui.renderResults(result)
+    ui.renderMetrics(result)
+    currentModel = result.model
+    ui.renderInstanceForm(dataset, currentModel)
+  } catch (error) {
+    ui.renderSummaryError(
+      error instanceof Error ? error.message : 'No se pudo completar el análisis.',
+    )
+  }
+}
+
+function handlePredictInstance(instance) {
+  if (!currentModel) {
+    ui.showPredictionError('Ejecuta primero el análisis para entrenar el modelo.')
+    return
+  }
+
+  try {
+    console.log(currentModel)
+    const prediction = classifier.predict(currentModel, instance)
+    ui.renderPredictionResult(prediction)
+  } catch (error) {
+    ui.showPredictionError(
+      error instanceof Error ? error.message : 'No se pudo predecir la instancia.',
+    )
+  }
 }

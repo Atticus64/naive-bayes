@@ -35,6 +35,10 @@
             <p class="file-types">CSV o XLSX <span aria-hidden="true">·</span> hasta 20 MB</p>
           </div>
           <p class="upload-message" id="upload-message" role="status" aria-live="polite"></p>
+          <div class="dataset-file-row" id="dataset-file-meta" hidden>
+            <span class="dataset-file-name" id="dataset-file-name"></span>
+            <button class="link-button" id="remove-dataset-file" type="button">Quitar archivo</button>
+          </div>
         </section>
 
         <section class="config-section" aria-labelledby="class-title">
@@ -155,7 +159,7 @@
                 <input type="radio" name="discretization-method" value="density" />
                 <span class="option-content">
                   <span class="option-title">Por función de densidad</span>
-                  <span class="option-desc">Intervalos definidos a partir de la distribución de los datos.</span>
+                  <span class="option-desc">Probabilidad estimada con una distribución normal por clase.</span>
                 </span>
               </label>
               <label class="option-card">
@@ -185,6 +189,38 @@
           <button class="primary-button" id="analyze-button" type="button">Analizar</button>
         </div>
         <div class="analysis-summary" id="analysis-summary" role="status" aria-live="polite" hidden></div>
+
+        <section class="config-section" id="instance-section" aria-labelledby="instance-title" hidden>
+          <div class="section-heading">
+            <div>
+              <h2 id="instance-title">Probar una instancia.</h2>
+            </div>
+          </div>
+          <p class="config-note">Ajusta los atributos y pulsa Predecir para ver la clase que estima el modelo entrenado.</p>
+          <div class="instance-form" id="instance-form"></div>
+          <div class="instance-actions">
+            <button class="primary-button" id="predict-button" type="button">Predecir</button>
+          </div>
+          <div class="analysis-summary" id="prediction-result" role="status" aria-live="polite" hidden></div>
+        </section>
+
+        <section class="config-section" id="metrics-section" aria-labelledby="metrics-title" hidden>
+          <div class="section-heading">
+            <div>
+              <h2 id="metrics-title">Métricas de evaluación.</h2>
+            </div>
+          </div>
+          <p class="config-note">Precisión y recall por clase, y matriz de confusión.</p>
+        </section>
+
+        <section id="metrics_container">
+        </section>
+
+        <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+
+        <section id="table_container">
+
+        </section>
       </main>
     </div>
     <script type="module" src="/src/main.js"></script>

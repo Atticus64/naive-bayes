@@ -166,15 +166,24 @@ importers:
 
   .:
     dependencies:
+      '@canvasjs/charts':
+        specifier: ^3.17.9
+        version: 3.17.9
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
     devDependencies:
+      '@types/canvasjs':
+        specifier: ^1.9.11
+        version: 1.9.11
       vite:
         specifier: ^8.3.5
         version: 8.3.5
 
 packages:
+
+  '@canvasjs/charts@3.17.9':
+    resolution: {integrity: sha512-FcihhmK1g40fSZ8f42V9ottivb6c7lPMLOFCG4RVGr9WmMRtV7HtjAxnREeeUqX+ljDlsDUJG86srxr7hqxrWw==}
 
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
@@ -277,6 +286,9 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@types/canvasjs@1.9.11':
+    resolution: {integrity: sha512-sx1sJS7Y9Hy/jd70Zj23xn2c5LE2tXM3Puh0aQoaMdTeHkbwueeTUeN531sepyujj47UZZGvim85DLiOjpiUeQ==}
 
   adler-32@1.3.1:
     resolution: {integrity: sha512-ynZ4w/nUUv5rrsR8UUGoe1VC9hZj6V5hU9Qw1HlMDJGEJw5S7TfTErWTjMys6M7vr0YWcPqs3qAr4ss0nDfP+A==}
@@ -482,6 +494,8 @@ packages:
 
 snapshots:
 
+  '@canvasjs/charts@3.17.9': {}
+
   '@oxc-project/types@0.156.0': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.16':
@@ -530,6 +544,8 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@types/canvasjs@1.9.11': {}
 
   adler-32@1.3.1: {}
 

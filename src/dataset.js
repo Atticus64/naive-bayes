@@ -64,24 +64,38 @@ export function headersMatch(left, right) {
 }
 
 /**
- * Obtiene el número y la lista de clases de la columna de clase.
- * @param {Dataset} dataset
- * @param {'first' | 'last'} position
- * @returns {{ count: number, classes: any[] }}
+ * Obtiene el número y la lista de clases de una columna.
+ * @param {any[][]} rows
+ * @param {number} columnIndex
+ * @returns {{ count: number, classes: string[] }}
  */
-export function getClassInfo(dataset, position = 'last') {
-  const { index } = dataset.getClassColumn(position)
+export function getClassInfoFromRows(rows, columnIndex) {
   const classes = []
   const seen = new Set()
 
-  for (const row of dataset.rows) {
-    const value = typeof row[index] === 'string' ? row[index].trim() : row[index]
-    if (value === '' || value == null || seen.has(value)) continue
+  for (const row of rows) {
+    const raw = row[columnIndex]
+    if (raw === '' || raw == null) continue
+
+    const value = String(raw).trim()
+    if (!value || seen.has(value)) continue
+
     seen.add(value)
     classes.push(value)
   }
 
   return { count: classes.length, classes }
+}
+
+/**
+ * Obtiene el número y la lista de clases de la columna de clase.
+ * @param {Dataset} dataset
+ * @param {'first' | 'last'} position
+ * @returns {{ count: number, classes: string[] }}
+ */
+export function getClassInfo(dataset, position = 'last') {
+  const { index } = dataset.getClassColumn(position)
+  return getClassInfoFromRows(dataset.rows, index)
 }
 
 export class DatasetValidator {
@@ -136,9 +150,11 @@ export class DatasetService {
     const headers = headerRow.map((value, index) => String(value).trim() || `Columna ${index + 1}`)
     const populatedRows = rows.filter((row) => row.some((value) => String(value).trim() !== ''))
 
+
     if (!headers.length || !populatedRows.length) {
       throw new Error('El archivo seleccionado no contiene una fila de encabezados y datos.')
     }
+
 
     const tipos_atributos = this.typeDetector.detect(headers, populatedRows)
     const parsed = { headers, rows: populatedRows, tipos_atributos }

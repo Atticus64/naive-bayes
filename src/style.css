@@ -84,6 +84,26 @@ p {
   margin: 0;
 }
 
+
+th {
+  padding: 6px 8px;
+  text-align: left;
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+}
+
+tr:nth-child(even) {
+  background: var(--surface-muted);
+}
+
 #app {
   width: min(100%, 1126px);
   min-height: 100svh;
@@ -196,6 +216,12 @@ p {
   border-color: var(--accent);
   background: var(--accent-soft);
   box-shadow: var(--shadow);
+}
+
+.drop-zone.is-loaded {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .drop-zone:focus-visible,
@@ -333,7 +359,8 @@ p {
   margin-top: 16px;
 }
 
-.test-file-row {
+.test-file-row,
+.dataset-file-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -346,7 +373,8 @@ p {
   font-size: 12px;
 }
 
-.test-file-name {
+.test-file-name,
+.dataset-file-name {
   overflow: hidden;
   color: var(--text-strong);
   font-weight: 650;
@@ -493,6 +521,70 @@ p {
   font-size: 11px;
 }
 
+.instance-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.instance-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.instance-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.instance-hint {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.instance-field input,
+.instance-field select {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 13px;
+}
+
+.instance-field input:focus-visible,
+.instance-field select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.instance-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.prediction-class {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.prediction-class strong {
+  color: var(--accent-text);
+  font-size: 15px;
+  font-weight: 750;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -537,6 +629,12 @@ p {
   margin-bottom: 10px;
   font-size: 14px;
   font-weight: 650;
+}
+
+.analysis-summary h2:not(:first-child) {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 
 .analysis-summary dl {
