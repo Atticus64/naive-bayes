@@ -48,13 +48,19 @@ export class AppUI {
       instanceForm: document.querySelector('#instance-form'),
       predictButton: document.querySelector('#predict-button'),
       predictionResult: document.querySelector('#prediction-result'),
-      metricsContainer: document.querySelector('#metrics_container'),
-      tableContainer: document.querySelector('#table_container'),
+      metricsSection: document.querySelector('#metrics-section'),
+      metricsKpis: document.querySelector('#metrics-kpis'),
+      metricsGrid: document.querySelector('#metrics-grid'),
+      metricsMatrix: document.querySelector('#metrics-matrix'),
+      metricsTable: document.querySelector('#metrics-table'),
+      metricsChartPanel: document.querySelector('#metrics-chart-panel'),
       chartContainer: document.querySelector('#chartContainer'),
     }
 
     this.instanceFields = []
     this.instanceColumnCount = 0
+    this.metricsChart = null
+    this.percentFormatters = new Map()
 
     this.bindEvents()
     this.updateValidationVisibility('simple')
@@ -313,92 +319,6 @@ export class AppUI {
     this.elements.analysisSummary.hidden = true
   }
 
-  renderSummary(request) {
-    const methodLabels = {
-      simple: 'Validación simple',
-      cross: 'Validación cruzada (50%–50%)',
-      stratified: 'Selección aleatoria estratificada',
-      external: 'Archivo de pruebas externo',
-    }
-    const discretizationLabels = {
-      density: 'Por función de densidad',
-      'equal-frequency': 'Intervalos de frecuencia iguales',
-      'equal-width': 'Intervalos de ancho igual',
-    }
-
-    const { analysisSummary } = this.elements
-    analysisSummary.replaceChildren()
-
-    const title = document.createElement('h2')
-    title.textContent = 'Configuración del análisis'
-
-    const list = document.createElement('dl')
-    this.appendSummaryItem(
-      list,
-      'Dataset',
-      `${request.dataset.fileName} · ${request.dataset.rows.length.toLocaleString()} filas · ${request.dataset.headers.length} columnas`,
-    )
-
-    if (request.testDataset) {
-      this.appendSummaryItem(
-        list,
-        'Pruebas',
-        `${request.testDataset.fileName} · ${request.testDataset.rows.length.toLocaleString()} filas · ${request.testDataset.headers.length} columnas`,
-      )
-    }
-
-    this.appendSummaryItem(
-      list,
-      'Clase',
-      `${request.classColumn.name} (columna ${request.classColumn.index + 1})`,
-    )
-
-    const { validation } = request
-    this.appendSummaryItem(list, 'Validación', methodLabels[validation.method])
-
-    if (validation.method !== 'external' && validation.method !== 'cross') {
-      this.appendSummaryItem(list, 'Entrenamiento', `${validation.trainingPercentage}%`)
-      this.appendSummaryItem(list, 'Pruebas', `${validation.testPercentage}%`)
-    }
-
-    this.appendSummaryItem(list, 'Discretización', discretizationLabels[request.discretization.method])
-    this.appendSummaryItem(list, 'Intervalos', String(request.discretization.bins))
-
-    analysisSummary.append(title, list)
-    analysisSummary.hidden = false
-  }
-
-  renderResults(result) {
-    const { analysisSummary } = this.elements
-
-    const title = document.createElement('h2')
-    title.textContent = 'Resultados del análisis'
-
-    const list = document.createElement('dl')
-    this.appendSummaryItem(
-      list,
-      'Entrenamiento',
-      `${result.trainingCount.toLocaleString()} filas`,
-    )
-    this.appendSummaryItem(list, 'Pruebas', `${result.testCount.toLocaleString()} filas`)
-    this.appendSummaryItem(list, 'Clases', String(result.model.classes.length))
-
-    if (result.evaluatedCount > 0) {
-      this.appendSummaryItem(list, 'Aciertos', `${result.correct} de ${result.evaluatedCount}`)
-      this.appendSummaryItem(list, 'Precisión', `${(result.accuracy * 100).toFixed(2)}%`)
-    } else {
-      this.appendSummaryItem(list, 'Precisión', 'No evaluable sin clase real')
-    }
-
-    const predictions = [...result.predictionCounts.entries()]
-      .map(([label, count]) => `${label}: ${count}`)
-      .join(' · ')
-    this.appendSummaryItem(list, 'Predicciones', predictions || 'Sin predicciones')
-
-    analysisSummary.append(title, list)
-    analysisSummary.hidden = false
-  }
-
   appendSummaryItem(list, term, description) {
     const dt = document.createElement('dt')
     dt.textContent = term
@@ -537,95 +457,455 @@ export class AppUI {
   }
 
   renderMetrics(result) {
-    const { metricsContainer, tableContainer, chartContainer } = this.elements
-    const { classList, confusionMatrix, precisions, recalls, f1Scores, accuracy } = result
+    const {
+      metricsSection,
+      metricsKpis,
+      metricsGrid,
+      metricsMatrix,
+      metricsTable,
+      metricsChartPanel,
+    } = this.elements
 
-    if (metricsContainer) {
-      const matrixHtml = `
-        <div>
-          <p>Accuracy: ${accuracy !== null ? accuracy.toFixed(4) : 'N/A'}</p>
-        </div>
-        <table>
-          <thead>
-            <tr class="table-header">
-              <th>Clase</th>
-              ${classList.map((v) => `<th>${v}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${classList
-              .map(
-                (actualClass, rowIndex) => `
-              <tr>
-                <td>${actualClass}</td>
-                ${confusionMatrix[rowIndex].map((count) => `<td>${count}</td>`).join('')}
-              </tr>
-            `,
-              )
-              .join('')}
-          </tbody>
-        </table>
-      `
-      metricsContainer.innerHTML = matrixHtml
+    if (!metricsSection) return
+
+    const {
+      classList,
+      confusionMatrix,
+      precisions,
+      recalls,
+      f1Scores,
+      accuracy,
+      correct,
+      evaluatedCount,
+    } = result
+    const supports =
+      result.supports ?? confusionMatrix.map((row) => row.reduce((sum, count) => sum + count, 0))
+    const macroPrecision = result.macroPrecision ?? this.macroAverage(precisions)
+    const macroRecall = result.macroRecall ?? this.macroAverage(recalls)
+    const macroF1 = result.macroF1 ?? this.macroAverage(f1Scores)
+
+    this.destroyMetricsChart()
+    metricsKpis.replaceChildren()
+    metricsMatrix.replaceChildren()
+    metricsTable.replaceChildren()
+
+    if (!evaluatedCount) {
+      const empty = document.createElement('p')
+      empty.className = 'metrics-empty'
+      empty.textContent =
+        'No hay instancias evaluables: el conjunto de pruebas no contiene clases reales o no se generaron predicciones.'
+      metricsKpis.append(empty)
+      if (metricsGrid) metricsGrid.hidden = true
+      if (metricsChartPanel) metricsChartPanel.hidden = true
+      metricsSection.hidden = false
+      return
     }
 
-    if (tableContainer) {
-      const tableHtml = `
-        <table>
-          <thead>
-            <tr class="table-header">
-              <th>Clase</th>
-              <th>Precisión</th>
-              <th>Recall</th>
-              <th>F1</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${classList
-              .map(
-                (classValue, index) => `
-              <tr>
-                <td>${classValue}</td>
-                <td>${precisions[index] !== null ? precisions[index].toFixed(4) : 'N/A'}</td>
-                <td>${recalls[index] !== null ? recalls[index].toFixed(4) : 'N/A'}</td>
-                <td>${f1Scores[index] !== null ? f1Scores[index].toFixed(4) : 'N/A'}</td>
-              </tr>
-            `,
-              )
-              .join('')}
-          </tbody>
-        </table>
-      `
-      tableContainer.innerHTML = tableHtml
-    }
+    if (metricsGrid) metricsGrid.hidden = false
+    if (metricsChartPanel) metricsChartPanel.hidden = false
+    metricsSection.hidden = false
 
-    if (chartContainer) {
-      const data = [
-        ...classList.map((classValue, index) => ({
-          label: `precision ${classValue}`,
-          y: precisions[index] !== null ? precisions[index] : 0,
-        })),
-        ...classList.map((classValue, index) => ({
-          label: `recall ${classValue}`,
-          y: recalls[index] !== null ? recalls[index] : 0,
-        })),
-        ...classList.map((classValue, index) => ({
-          label: `f1 ${classValue}`,
-          y: f1Scores[index] !== null ? f1Scores[index] : 0,
-        })),
-      ]
+    this.renderMetricCards({
+      accuracy,
+      macroPrecision,
+      macroRecall,
+      macroF1,
+      correct,
+      evaluatedCount,
+    })
+    this.renderConfusionMatrix({ classList, confusionMatrix, supports, evaluatedCount })
+    this.renderClassMetricsTable({
+      classList,
+      precisions,
+      recalls,
+      f1Scores,
+      supports,
+      macroPrecision,
+      macroRecall,
+      macroF1,
+      evaluatedCount,
+    })
+    this.renderMetricsChart({ classList, precisions, recalls, f1Scores })
+  }
 
-      const chart = new CanvasJS.Chart('chartContainer', {
-        animationEnabled: true,
-        exportEnabled: true,
-        theme: 'light1',
-        title: { text: 'Medidas de desempeño por clase' },
-        axisY: { includeZero: true },
-        data: [{ type: 'column', indexLabelFontColor: '#5A5757', indexLabelFontSize: 16, indexLabelPlacement: 'outside', dataPoints: data }],
-      })
-      chart.render()
+  renderMetricCards({ accuracy, macroPrecision, macroRecall, macroF1, correct, evaluatedCount }) {
+    const { metricsKpis } = this.elements
+    const cards = [
+      {
+        label: 'Exactitud',
+        value: accuracy,
+        detail: `${correct} de ${evaluatedCount} aciertos`,
+        primary: true,
+      },
+      { label: 'Precisión macro', value: macroPrecision, detail: 'Promedio por clase' },
+      { label: 'Recall macro', value: macroRecall, detail: 'Promedio por clase' },
+      { label: 'F1 macro', value: macroF1, detail: 'Media armónica' },
+    ]
+
+    for (const card of cards) {
+      const article = document.createElement('article')
+      article.className = 'metric-card'
+      if (card.primary) article.classList.add('metric-card--primary')
+
+      const label = document.createElement('span')
+      label.className = 'metric-label'
+      label.textContent = card.label
+
+      const value = document.createElement('strong')
+      value.className = 'metric-value'
+      value.textContent = this.formatPercent(card.value, 1)
+
+      const detail = document.createElement('span')
+      detail.className = 'metric-detail'
+      detail.textContent = card.value === null ? 'Sin datos evaluables' : card.detail
+
+      article.append(label, value, detail)
+      metricsKpis.append(article)
     }
   }
+
+  renderConfusionMatrix({ classList, confusionMatrix, supports, evaluatedCount }) {
+    const { metricsMatrix } = this.elements
+    const table = document.createElement('table')
+    table.className = 'confusion-matrix'
+
+    const caption = document.createElement('caption')
+    caption.className = 'visually-hidden'
+    caption.textContent =
+      'Matriz de confusión: las filas representan la clase real y las columnas la clase predicha.'
+    table.append(caption)
+
+    const thead = document.createElement('thead')
+    const headRow = document.createElement('tr')
+    const corner = document.createElement('th')
+    corner.scope = 'col'
+    corner.className = 'matrix-corner'
+    corner.textContent = 'Real \\ Predicha'
+    headRow.append(corner)
+
+    for (const classValue of classList) {
+      const header = document.createElement('th')
+      header.scope = 'col'
+      header.className = 'matrix-class-header'
+      header.textContent = String(classValue)
+      headRow.append(header)
+    }
+
+    const totalHeader = document.createElement('th')
+    totalHeader.scope = 'col'
+    totalHeader.textContent = 'Total real'
+    headRow.append(totalHeader)
+    thead.append(headRow)
+    table.append(thead)
+
+    const tbody = document.createElement('tbody')
+    const columnTotals = new Array(classList.length).fill(0)
+
+    classList.forEach((actualClass, rowIndex) => {
+      const row = document.createElement('tr')
+
+      const rowHeader = document.createElement('th')
+      rowHeader.scope = 'row'
+      rowHeader.className = 'matrix-row-header'
+      rowHeader.textContent = String(actualClass)
+      row.append(rowHeader)
+
+      const rowTotal = supports[rowIndex] ?? 0
+
+      classList.forEach((predictedClass, columnIndex) => {
+        const count = confusionMatrix[rowIndex][columnIndex]
+        columnTotals[columnIndex] += count
+        const isCorrect = rowIndex === columnIndex
+        const cell = document.createElement('td')
+        let cellState = 'matrix-cell--zero'
+        if (count > 0) cellState = isCorrect ? 'matrix-cell--correct' : 'matrix-cell--error'
+        cell.className = `matrix-cell ${cellState}`
+
+        if (count > 0 && rowTotal > 0) {
+          const share = count / rowTotal
+          const heat = Math.max(12, Math.min(60, Math.round(share * 60)))
+          cell.style.setProperty('--heat', `${heat}%`)
+          cell.title = `${count} de ${rowTotal} (${this.formatPercent(share, 1)}) instancias reales de ${actualClass} ${
+            isCorrect ? 'clasificadas correctamente' : `predichas como ${predictedClass}`
+          }.`
+        } else {
+          cell.title = `Sin instancias reales de ${actualClass} predichas como ${predictedClass}.`
+        }
+
+        const countLabel = document.createElement('span')
+        countLabel.className = 'matrix-count'
+        countLabel.textContent = this.formatCount(count)
+        cell.append(countLabel)
+
+        if (count > 0 && rowTotal > 0) {
+          const shareLabel = document.createElement('span')
+          shareLabel.className = 'matrix-share'
+          shareLabel.textContent = this.formatPercent(count / rowTotal, 0)
+          cell.append(shareLabel)
+        }
+
+        row.append(cell)
+      })
+
+      const totalCell = document.createElement('td')
+      totalCell.className = 'matrix-total'
+      totalCell.textContent = this.formatCount(rowTotal)
+      row.append(totalCell)
+      tbody.append(row)
+    })
+
+    table.append(tbody)
+
+    const tfoot = document.createElement('tfoot')
+    const totalRow = document.createElement('tr')
+    totalRow.className = 'matrix-total-row'
+
+    const totalRowHeader = document.createElement('th')
+    totalRowHeader.scope = 'row'
+    totalRowHeader.textContent = 'Total predicho'
+    totalRow.append(totalRowHeader)
+
+    for (const total of columnTotals) {
+      const cell = document.createElement('td')
+      cell.textContent = this.formatCount(total)
+      totalRow.append(cell)
+    }
+
+    const grandTotal = document.createElement('td')
+    grandTotal.textContent = this.formatCount(evaluatedCount)
+    totalRow.append(grandTotal)
+    tfoot.append(totalRow)
+    table.append(tfoot)
+
+    metricsMatrix.append(table)
+  }
+
+  renderClassMetricsTable({
+    classList,
+    precisions,
+    recalls,
+    f1Scores,
+    supports,
+    macroPrecision,
+    macroRecall,
+    macroF1,
+    evaluatedCount,
+  }) {
+    const { metricsTable } = this.elements
+    const table = document.createElement('table')
+    table.className = 'class-metrics'
+
+    const caption = document.createElement('caption')
+    caption.className = 'visually-hidden'
+    caption.textContent =
+      'Precisión, recall, F1 y soporte por clase, con el promedio macro al final.'
+    table.append(caption)
+
+    const thead = document.createElement('thead')
+    const headRow = document.createElement('tr')
+    for (const title of ['Clase', 'Precisión', 'Recall', 'F1', 'Soporte']) {
+      const header = document.createElement('th')
+      header.scope = 'col'
+      header.textContent = title
+      headRow.append(header)
+    }
+    thead.append(headRow)
+    table.append(thead)
+
+    const tbody = document.createElement('tbody')
+    classList.forEach((classValue, index) => {
+      const row = document.createElement('tr')
+
+      const rowHeader = document.createElement('th')
+      rowHeader.scope = 'row'
+      rowHeader.className = 'class-name'
+      rowHeader.textContent = String(classValue)
+      row.append(rowHeader)
+
+      row.append(
+        this.createMetricCell(precisions[index], 'precision'),
+        this.createMetricCell(recalls[index], 'recall'),
+        this.createMetricCell(f1Scores[index], 'f1'),
+      )
+
+      const supportCell = document.createElement('td')
+      supportCell.className = 'metric-support'
+      supportCell.textContent = this.formatCount(supports[index] ?? 0)
+      row.append(supportCell)
+
+      tbody.append(row)
+    })
+    table.append(tbody)
+
+    const tfoot = document.createElement('tfoot')
+    const macroRow = document.createElement('tr')
+
+    const macroHeader = document.createElement('th')
+    macroHeader.scope = 'row'
+    macroHeader.textContent = 'Promedio macro'
+    macroRow.append(macroHeader)
+
+    macroRow.append(
+      this.createMetricCell(macroPrecision, 'precision', { bar: false }),
+      this.createMetricCell(macroRecall, 'recall', { bar: false }),
+      this.createMetricCell(macroF1, 'f1', { bar: false }),
+    )
+
+    const totalSupport = document.createElement('td')
+    totalSupport.className = 'metric-support'
+    totalSupport.textContent = this.formatCount(evaluatedCount)
+    macroRow.append(totalSupport)
+
+    tfoot.append(macroRow)
+    table.append(tfoot)
+
+    metricsTable.append(table)
+  }
+
+  createMetricCell(value, variant, { bar = true } = {}) {
+    const cell = document.createElement('td')
+    cell.className = 'metric-cell'
+
+    const number = document.createElement('span')
+    number.className = 'metric-number'
+
+    if (value === null || value === undefined || !Number.isFinite(value)) {
+      cell.classList.add('is-null')
+      number.textContent = '—'
+      cell.title = 'No calculable con los datos actuales.'
+    } else {
+      number.textContent = this.formatPercent(value, 2)
+    }
+    cell.append(number)
+
+    if (bar && value !== null && Number.isFinite(value)) {
+      const barElement = document.createElement('span')
+      barElement.className = 'metric-bar'
+      barElement.setAttribute('aria-hidden', 'true')
+
+      const fill = document.createElement('span')
+      fill.className = `metric-bar-fill metric-bar-fill--${variant}`
+      fill.style.width = `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`
+      barElement.append(fill)
+      cell.append(barElement)
+    }
+
+    return cell
+  }
+
+  renderMetricsChart({ classList, precisions, recalls, f1Scores }) {
+    const { chartContainer } = this.elements
+    if (!chartContainer) return
+
+    this.destroyMetricsChart()
+    chartContainer.replaceChildren()
+
+    const reduceMotion =
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    const series = (name, color, values) => ({
+      type: 'column',
+      name,
+      color,
+      showInLegend: true,
+      yValueFormatString: '0.0%',
+      dataPoints: classList.map((classValue, index) => ({
+        label: String(classValue),
+        y: Number.isFinite(values[index]) ? values[index] : 0,
+      })),
+    })
+
+    this.metricsChart = new CanvasJS.Chart('chartContainer', {
+      animationEnabled: !reduceMotion,
+      exportEnabled: true,
+      theme: 'light1',
+      backgroundColor: 'transparent',
+      axisX: {
+        labelFontColor: '#3a506b',
+        labelFontSize: 12,
+        tickLength: 0,
+      },
+      axisY: {
+        minimum: 0,
+        maximum: 1,
+        interval: 0.2,
+        gridColor: '#e3e8ef',
+        labelFontColor: '#3a506b',
+        labelFontSize: 11,
+        tickLength: 0,
+        labelFormatter: (event) => `${Math.round(event.value * 100)}%`,
+      },
+      legend: {
+        horizontalAlign: 'center',
+        verticalAlign: 'bottom',
+        fontSize: 12,
+        fontColor: '#3a506b',
+      },
+      toolTip: { shared: true },
+      data: [
+        series('Precisión', '#1c2541', precisions),
+        series('Recall', '#5bc0be', recalls),
+        series('F1', '#3a506b', f1Scores),
+      ],
+    })
+    this.metricsChart.render()
+  }
+
+  destroyMetricsChart() {
+    if (!this.metricsChart) return
+    try {
+      this.metricsChart.destroy()
+    } catch (error) {
+      console.error(error)
+    }
+    this.metricsChart = null
+  }
+
+  clearMetrics() {
+    const {
+      metricsSection,
+      metricsKpis,
+      metricsGrid,
+      metricsMatrix,
+      metricsTable,
+      metricsChartPanel,
+      chartContainer,
+    } = this.elements
+
+    this.destroyMetricsChart()
+    metricsKpis?.replaceChildren()
+    metricsMatrix?.replaceChildren()
+    metricsTable?.replaceChildren()
+    chartContainer?.replaceChildren()
+    if (metricsGrid) metricsGrid.hidden = false
+    if (metricsChartPanel) metricsChartPanel.hidden = false
+    if (metricsSection) metricsSection.hidden = true
+  }
+
+  macroAverage(values) {
+    const valid = values.filter((value) => value !== null && Number.isFinite(value))
+    if (!valid.length) return null
+    return valid.reduce((sum, value) => sum + value, 0) / valid.length
+  }
+
+  formatPercent(value, digits = 1) {
+    if (value === null || value === undefined || !Number.isFinite(value)) return '—'
+    if (!this.percentFormatters.has(digits)) {
+      this.percentFormatters.set(
+        digits,
+        new Intl.NumberFormat('es-ES', {
+          style: 'percent',
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        }),
+      )
+    }
+    return this.percentFormatters.get(digits).format(value)
+  }
+
+  formatCount(value) {
+    return Number(value).toLocaleString('es-ES')
+  }
+
   showPredictionError(message) {
     const { predictionResult } = this.elements
 

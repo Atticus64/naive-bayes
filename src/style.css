@@ -85,25 +85,6 @@ p {
 }
 
 
-th {
-  padding: 6px 8px;
-  text-align: left;
-  color: var(--text-strong);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
-td {
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-}
-
-tr:nth-child(even) {
-  background: var(--surface-muted);
-}
-
 #app {
   width: min(100%, 1126px);
   min-height: 100svh;
@@ -664,6 +645,307 @@ tr:nth-child(even) {
   font-weight: 650;
 }
 
+/* Métricas de evaluación */
+.metrics-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.metric-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 15px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.metric-card--primary {
+  border-color: var(--accent-border);
+  background: linear-gradient(145deg, var(--surface) 10%, var(--accent-soft) 100%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.metric-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  color: var(--text-strong);
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.metric-card--primary .metric-value {
+  color: var(--accent-text);
+}
+
+.metric-detail {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.metrics-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.metrics-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.metrics-chart-panel {
+  margin-top: 14px;
+}
+
+.metrics-panel h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.metrics-hint {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.metrics-table-scroll {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+.metrics-table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics-table-scroll th,
+.metrics-table-scroll td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.metrics-table-scroll thead th {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.metrics-table-scroll tbody tr:last-child th,
+.metrics-table-scroll tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.metrics-table-scroll tbody th,
+.metrics-table-scroll tfoot th {
+  text-align: left;
+}
+
+.metrics-table-scroll tfoot th,
+.metrics-table-scroll tfoot td {
+  border-bottom: 0;
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.confusion-matrix .matrix-corner {
+  min-width: 110px;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.confusion-matrix thead .matrix-class-header {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.confusion-matrix .matrix-row-header {
+  color: var(--text-strong);
+  font-weight: 700;
+  text-align: left;
+}
+
+.matrix-cell {
+  min-width: 64px;
+  vertical-align: middle;
+}
+
+.matrix-count {
+  display: block;
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.matrix-share {
+  display: block;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.matrix-cell--correct {
+  background: color-mix(in srgb, var(--accent) var(--heat, 24%), var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
+.matrix-cell--error {
+  background: color-mix(in srgb, var(--danger) var(--heat, 16%), var(--surface));
+}
+
+.matrix-cell--zero {
+  background: var(--surface);
+}
+
+.matrix-cell--zero .matrix-count {
+  color: var(--border-strong);
+  font-weight: 500;
+}
+
+.matrix-total {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.matrix-total-row th,
+.matrix-total-row td {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.confusion-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.confusion-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.confusion-swatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.confusion-swatch--correct {
+  background: color-mix(in srgb, var(--accent) 55%, var(--white));
+}
+
+.confusion-swatch--error {
+  background: color-mix(in srgb, var(--danger) 45%, var(--white));
+}
+
+.class-metrics .class-name {
+  color: var(--text-strong);
+  font-weight: 700;
+  text-align: left;
+}
+
+.metric-number {
+  display: block;
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.metric-cell.is-null .metric-number {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.metric-bar {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.metric-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 420ms ease;
+}
+
+.metric-bar-fill--precision {
+  background: var(--accent);
+}
+
+.metric-bar-fill--recall {
+  background: var(--dusk-blue);
+}
+
+.metric-bar-fill--f1 {
+  background: var(--prussian-blue);
+}
+
+.metric-support {
+  color: var(--text-muted);
+  font-weight: 650;
+}
+
+.metrics-chart {
+  width: 100%;
+  height: 360px;
+  margin-top: 12px;
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -725,6 +1007,14 @@ tr:nth-child(even) {
 
   .analysis-summary dd {
     margin-bottom: 8px;
+  }
+
+  .metrics-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics-chart {
+    height: 300px;
   }
 }
 

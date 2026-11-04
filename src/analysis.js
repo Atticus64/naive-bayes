@@ -625,14 +625,14 @@ export class AnalysisService {
 
     const classList = result.model.classes
     const matrix = this.metrics.confusionMatrix(classList, evaluated)
-    const acc = this.metrics.accuracy(matrix)
-    // const precisions = classList.map((_, index) => this.metrics.precision(matrix, index))
-    const precisions = classList.map((_, index) => this.metrics.precision(matrix, index)) 
+    const precisions = classList.map((_, index) => this.metrics.precision(matrix, index))
     const recalls = classList.map((_, index) => this.metrics.recall(matrix, index))
     const f1Scores = classList.map((_, index) => this.metrics.f1(precisions[index], recalls[index]))
-    // const matrix = this.metrics.confusionMatrix(evaluated, result.model.classes)
-
-    const accuracy = evaluated.length ? correct / evaluated.length : null
+    const supports = this.metrics.supports(matrix)
+    const macroPrecision = this.metrics.macroAverage(precisions)
+    const macroRecall = this.metrics.macroAverage(recalls)
+    const macroF1 = this.metrics.macroAverage(f1Scores)
+    const accuracy = this.metrics.accuracy(matrix)
 
     const predictionCounts = new Map()
     for (const prediction of result.predictions) {
@@ -651,6 +651,10 @@ export class AnalysisService {
       precisions,
       recalls,
       f1Scores,
+      supports,
+      macroPrecision,
+      macroRecall,
+      macroF1,
     }
   }
 }

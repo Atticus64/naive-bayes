@@ -57,11 +57,25 @@ export class Metrics {
 
   static f1(precision, recall) {
 
-    if (precision === null || recall === null || precision + recall === 0) {
+    if (precision === null || recall === null) {
       return null
     }
 
-    return 2 * (precision * recall) / (precision + recall)
+    if (precision + recall === 0) {
+      return 0
+    }
+
+    return (2 * (precision * recall)) / (precision + recall)
+  }
+
+  static supports(matrix) {
+    return matrix.map((row) => row.reduce((sum, count) => sum + count, 0))
+  }
+
+  static macroAverage(values) {
+    const valid = values.filter((value) => value !== null && Number.isFinite(value))
+    if (!valid.length) return null
+    return valid.reduce((sum, value) => sum + value, 0) / valid.length
   }
 
   static report(actual, predicted) {

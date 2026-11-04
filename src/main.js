@@ -36,6 +36,7 @@ async function handleDatasetFile(file) {
     dataset = parsed
     currentModel = null
     ui.hideInstanceSection()
+    ui.clearMetrics()
     console.log(dataset)
     const classInfo = getClassInfo(dataset, config.classPosition)
     console.log(classInfo)
@@ -79,6 +80,7 @@ async function handleTestFile(file) {
     config.setUseExternalTest(true)
     ui.setExternalTestEnabled(true)
     ui.renderTestFileMeta(testDataset)
+    ui.clearMetrics()
   } catch (error) {
     ui.showTestUploadError(
       error instanceof Error
@@ -92,6 +94,7 @@ function handleToggleExternalTest(enabled) {
   config.setUseExternalTest(enabled)
   if (!enabled) testDataset = null
   ui.setExternalTestEnabled(enabled)
+  ui.clearMetrics()
 }
 
 function handleRemoveDatasetFile() {
@@ -108,18 +111,21 @@ function handleRemoveDatasetFile() {
   ui.updateContinuousNote(null)
   ui.hideSummary()
   ui.hideInstanceSection()
+  ui.clearMetrics()
 }
 
 function handleRemoveTestFile() {
   testDataset = null
   config.setUseExternalTest(false)
   ui.setExternalTestEnabled(false)
+  ui.clearMetrics()
 }
 
 function handleClassPositionChange(position) {
   config.setClassPosition(position)
   currentModel = null
   ui.hideInstanceSection()
+  ui.clearMetrics()
   if (!dataset) return
 
   const classInfo = getClassInfo(dataset, position)
@@ -128,28 +134,34 @@ function handleClassPositionChange(position) {
 
 function handleValidationMethodChange(method) {
   config.setValidationMethod(method)
+  ui.clearMetrics()
 }
 
 function handleDiscretizationMethodChange(method) {
   config.setDiscretizationMethod(method)
+  ui.clearMetrics()
 }
 
 function handleTrainingPercentageChange(value) {
   config.setTrainingPercentage(value)
+  ui.clearMetrics()
 }
 
 function handleStratifiedPercentageChange(value) {
   config.setStratifiedPercentage(value)
+  ui.clearMetrics()
 }
 
 function handleBinCountChange(value) {
   config.setBinCount(value)
+  ui.clearMetrics()
 }
 
 function handleAnalyze() {
   ui.hideSummary()
   currentModel = null
   ui.hideInstanceSection()
+  ui.clearMetrics()
 
   if (!dataset) {
     ui.renderSummaryError('Carga un dataset antes de analizar.')
@@ -163,12 +175,10 @@ function handleAnalyze() {
 
   analysisRequest = analysisService.buildRequest({ dataset, testDataset })
   console.log(analysisRequest)
-  ui.renderSummary(analysisRequest)
 
   try {
     const result = analysisService.run(analysisRequest)
     console.log(result)
-    ui.renderResults(result)
     ui.renderMetrics(result)
     currentModel = result.model
     ui.renderInstanceForm(dataset, currentModel)
