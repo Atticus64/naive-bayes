@@ -18,7 +18,7 @@
 
       <main class="workspace">
         <section class="intro" aria-labelledby="page-title">
-          <h2 id="page-title">Carga tu dataset.</h1>
+          <h2 id="page-title">Carga tu dataset.</h2>
           <p class="intro-copy">Selecciona un archivo CSV o XLSX para cargar tu dataset.</p>
         </section>
 
@@ -204,22 +204,41 @@
           <div class="analysis-summary" id="prediction-result" role="status" aria-live="polite" hidden></div>
         </section>
 
-        <section class="config-section" id="metrics-section" aria-labelledby="metrics-title" hidden>
+        <section class="config-section metrics-section" id="metrics-section" aria-labelledby="metrics-title" hidden>
           <div class="section-heading">
             <div>
               <h2 id="metrics-title">Métricas de evaluación.</h2>
             </div>
           </div>
-          <p class="config-note">Precisión y recall por clase, y matriz de confusión.</p>
-        </section>
+          <p class="config-note">
+            Exactitud global y precisión, recall y F1 por clase, junto con la matriz de confusión.
+          </p>
 
-        <section id="metrics_container">
-        </section>
+          <div class="metrics-kpis" id="metrics-kpis"></div>
 
-        <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+          <div class="metrics-grid" id="metrics-grid">
+            <article class="metrics-panel">
+              <h3>Matriz de confusión</h3>
+              <p class="metrics-hint">Filas: clase real · Columnas: clase predicha</p>
+              <div class="metrics-table-scroll" id="metrics-matrix"></div>
+              <ul class="confusion-legend" aria-label="Leyenda de la matriz de confusión">
+                <li><span class="confusion-swatch confusion-swatch--correct" aria-hidden="true"></span>Acierto</li>
+                <li><span class="confusion-swatch confusion-swatch--error" aria-hidden="true"></span>Error</li>
+                <li>El porcentaje se calcula sobre la clase real.</li>
+              </ul>
+            </article>
 
-        <section id="table_container">
+            <article class="metrics-panel">
+              <h3>Medidas por clase</h3>
+              <p class="metrics-hint">Precisión, recall y F1 con el soporte de cada clase.</p>
+              <div class="metrics-table-scroll" id="metrics-table"></div>
+            </article>
+          </div>
 
+          <article class="metrics-panel metrics-chart-panel" id="metrics-chart-panel">
+            <h3>Comparación por clase</h3>
+            <div id="chartContainer" class="metrics-chart"></div>
+          </article>
         </section>
       </main>
     </div>
